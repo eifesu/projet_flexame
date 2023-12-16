@@ -1,8 +1,23 @@
 import { useState } from "react";
+import { redirect } from "react-router-dom";
 
 export default function AuthPage() {
     const [id, setId] = useState<string>("");
+    const [loading, setLoading] = useState<boolean>(false);
     const [password, setPassword] = useState<string>("");
+
+    async function onSubmit() {
+        if (id && password) {
+            setLoading(true);
+            setTimeout(() => {
+                if (id === "correcteur" && password === "correcteur") {
+                    redirect("/");
+                }
+                setLoading(false);
+            }, 2000);
+        }
+    }
+
     return (
         <div className="flex h-screen w-full flex-col">
             <nav className="flex h-1 w-full items-center justify-center p-8">
@@ -15,7 +30,10 @@ export default function AuthPage() {
                     <p className="font-jakarta text-2xl font-extrabold text-zinc-200 md:text-3xl lg:text-4xl xl:text-5xl">
                         Connexion
                     </p>
-                    <form className="flex flex-col items-center justify-center gap-8">
+                    <form
+                        onSubmit={onSubmit}
+                        className="flex flex-col items-center justify-center gap-8"
+                    >
                         <input
                             type="text"
                             value={id}
