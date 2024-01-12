@@ -13,10 +13,23 @@ interface Classe {
     major: string;
 }
 
+interface Exam {
+    id: string;
+    name: string;
+    classId: string;
+}
+
 interface Student {
     id: string;
     classId: string;
     firstName: string;
     lastName: string;
-    matricule: number;
+    matricule: string;
+}
+
+interface Grade {
+    id: string;
+    classId: string;
+    examId: string;
+    grade: number;
 }

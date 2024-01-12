@@ -28,7 +28,7 @@ export default function AuthPage() {
             <main className="flex w-full flex-1 flex-col items-center justify-center">
                 <div className="flex flex-col items-center justify-start gap-16">
                     <p className="font-jakarta text-2xl font-extrabold text-zinc-200 md:text-3xl lg:text-4xl xl:text-5xl">
-                        Connexion
+                        {loading}
                     </p>
                     <form
                         onSubmit={onSubmit}
@@ -52,12 +52,26 @@ export default function AuthPage() {
                             }
                             className="w-[400px] border-b border-b-zinc-200 bg-transparent pb-1 font-inter text-sm text-zinc-200 outline-none placeholder:text-zinc-300"
                         />
-                        <button
-                            type="submit"
-                            className="tracking-tightest rounded-full bg-brand-yellow p-3 px-6 font-jakarta font-extrabold active:bg-zinc-800 active:text-brand-yellow"
-                        >
-                            Se connecter
-                        </button>
+                        <div className="flex flex-col gap-2 text-center">
+                            <a
+                                href="/grades"
+                                className="tracking-tightest rounded-full text-xs bg-brand-yellow p-3 px-6 font-jakarta font-extrabold active:bg-zinc-800 active:text-brand-yellow"
+                            >
+                                Se connecter en tant qu'administrateur
+                            </a>
+                            <a
+                                href="/examens"
+                                className="tracking-tightest rounded-full text-xs bg-orange-500 p-3 px-6 font-jakarta font-extrabold active:bg-zinc-800 active:text-brand-yellow"
+                            >
+                                Se connecter en tant que surveillant
+                            </a>
+                            <a
+                                href="/grades"
+                                className="tracking-tightest rounded-full text-xs bg-purple-500 p-3 px-6 font-jakarta font-extrabold active:bg-zinc-800 active:text-brand-yellow"
+                            >
+                                Se connecter en tant que correcteur
+                            </a>
+                        </div>
                         {/* <a
                             href="/login"
                             className="-mt-2 flex items-center gap-1 border-b border-b-zinc-200 pb-0 font-inter text-sm font-bold text-zinc-200 transition-all hover:scale-105 hover:cursor-pointer hover:border-b-brand-yellow hover:text-brand-yellow"

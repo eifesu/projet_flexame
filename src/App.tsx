@@ -1,9 +1,12 @@
 import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import AuthPage from "./pages/AuthPage";
-import UsersPage from "./pages/UsersPage";
-import StudentsPage from "./pages/StudentsPage";
+import UsersPage from "./pages/(admin)/users/page";
+import StudentsPage from "./pages/(admin)/students/page";
+import AuthPage from "./pages/auth/page";
+import ExamPage from "./pages/(surveillant)/exams/page";
+import GradesPage from "./pages/(correcteur)/grades/page";
+// import ExamPage from "./pages/ExamPage";
 
 const router = createBrowserRouter([
     {
@@ -21,6 +24,14 @@ const router = createBrowserRouter([
     {
         path: "/effectifs",
         element: <StudentsPage />,
+    },
+    {
+        path: "/examens",
+        element: <ExamPage />,
+    },
+    {
+        path: "/grades",
+        element: <GradesPage />,
     },
 ]);
 

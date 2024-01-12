@@ -10,17 +10,19 @@ import {
     QueryDocumentSnapshot,
 } from "firebase/firestore";
 import db from "../lib/firebase";
+import { useUsersPageStore } from "../pages/(admin)/users/_store";
 
 const useUsers = () => {
     // Firestore collection reference
     const usersRef = collection(db, "users");
-
+    const { setUsers } = useUsersPageStore();
     // Function to create a new user
     const createUser = async (
         userData: Omit<User, "id">
     ): Promise<string | Error> => {
         try {
             const docRef = await addDoc(usersRef, userData);
+            getAllUsers();
             return docRef.id;
         } catch (error) {
             return new Error("Error adding document: " + error);
@@ -39,7 +41,11 @@ const useUsers = () => {
     const getAllUsers = async (): Promise<User[] | Error> => {
         try {
             const querySnapshot = await getDocs(usersRef);
-            return querySnapshot.docs.map(userFromSnapshot);
+            const arr = querySnapshot.docs.map(userFromSnapshot);
+            if (Array.isArray(arr)) {
+                setUsers(arr);
+            }
+            return arr;
         } catch (error) {
             return new Error("Error fetching documents: " + error);
         }
@@ -69,6 +75,7 @@ const useUsers = () => {
         try {
             const userDoc = doc(db, "users", id);
             await updateDoc(userDoc, updatedData);
+            getAllUsers();
         } catch (error) {
             return new Error("Error updating document: " + error);
         }
@@ -79,6 +86,7 @@ const useUsers = () => {
         try {
             const userDoc = doc(db, "users", id);
             await deleteDoc(userDoc);
+            getAllUsers();
         } catch (error) {
             return new Error("Error deleting document: " + error);
         }

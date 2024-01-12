@@ -1,8 +1,14 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useEffect, useState } from "react";
-import db from "../lib/firebase";
-import { addDoc, collection, getDocs } from "firebase/firestore";
-import Modal from "../components/ModalComponent";
+import db from "../../../lib/firebase";
+import {
+    addDoc,
+    collection,
+    doc,
+    getDocs,
+    updateDoc,
+} from "firebase/firestore";
+import Modal from "../../../components/ui/Modal";
 
 export default function StudentsPage() {
     const [classes, setClasses] = useState<Classe[]>([]);
@@ -10,16 +16,35 @@ export default function StudentsPage() {
     const [selectedBranch, setSelectedBranch] = useState<string>();
     const [selectedClass, setSelectedClass] = useState<Classe>();
     const [isCreatingClass, setIsCreatingClass] = useState<boolean>(false);
+
+    const [isEditingStudent, setIsEditingStudent] = useState<boolean>(false);
     const [isCreatingStudent, setIsCreatingStudent] = useState<boolean>(false);
     const [selectedStudent, setSelectedStudent] = useState<Student>();
+    const [firstName, setFirstName] = useState<string>("");
+    const [lastName, setLastName] = useState<string>("");
+    const [matricule, setMatricule] = useState<string>("");
+
     const [className, setClassName] = useState<string>("");
     const [classMajor, setClassMajor] = useState<string>("");
+
     const q = collection(db, "classes");
     const s = collection(db, "students");
 
+    async function updateStudent(
+        id: string,
+        updatedData: Partial<Student>
+    ): Promise<void | Error> {
+        try {
+            const studentDoc = doc(db, "students", id);
+            await updateDoc(studentDoc, updatedData);
+        } catch (error) {
+            return new Error("Error updating document: " + error);
+        }
+    }
     async function createClass(classData: Omit<Classe, "id">) {
         await addDoc(q, classData);
     }
+
     async function createStudent(studentData: Omit<Student, "id">) {
         await addDoc(s, studentData);
     }
@@ -27,7 +52,7 @@ export default function StudentsPage() {
     async function getClasses() {
         const querySnapshot = await getDocs(q);
         const arr = querySnapshot.docs.map((doc) => ({
-            // @ts-expect-error Firestore requirements
+            // @ts-expect-error API type requirements
             id: doc.id,
             ...(doc.data() as Classe),
         }));
@@ -37,16 +62,18 @@ export default function StudentsPage() {
     async function getStudents() {
         const querySnapshot = await getDocs(s);
         const arr = querySnapshot.docs.map((doc) => ({
-            // @ts-expect-error Firestore requirements
+            // @ts-expect-error API type requirements
             id: doc.id,
             ...(doc.data() as Student),
         }));
+        console.log(arr);
         setStudents(arr);
     }
 
     useEffect(() => {
         getClasses();
         getStudents();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     return (
         <div className="flex h-screen w-full flex-col">
@@ -83,21 +110,16 @@ export default function StudentsPage() {
                         </a>
                     </div>
                     <div className="flex items-center gap-4 rounded-lg border border-zinc-700 bg-zinc-800 p-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-yellow font-inter text-lg font-bold text-zinc-900">
-                            AA
-                        </div>
-                        <div className="mr-4 flex flex-col items-start justify-start font-jakarta font-bold text-zinc-200">
-                            <p className="text-xs opacity-50">Nom complet</p>
-                            <p>AKA Adingra</p>
-                        </div>
                         <div className="flex items-center justify-center rounded-full bg-brand-yellow p-2 px-4 font-jakarta text-[10px] font-extrabold text-zinc-900">
                             Admin
                         </div>
                     </div>
                 </div>
             </nav>
+
             <main className="flex w-full flex-1 select-none items-start justify-center gap-4 p-4">
-                <div className="h-full w-[600px] flex-col items-start justify-start rounded-lg border border-zinc-700 bg-zinc-800 font-jakarta text-zinc-200">
+                {/* Navigateur filières */}
+                <div className="h-full w-[500px] flex-col items-start justify-start rounded-lg border border-zinc-700 bg-zinc-800 font-jakarta text-zinc-200">
                     <div className="flex w-full items-center justify-between p-4">
                         <p className="font-jakarta text-2xl font-bold text-zinc-200">
                             Filières
@@ -319,7 +341,7 @@ export default function StudentsPage() {
                                                     student.classId == obj.id
                                             ).length
                                         }{" "}
-                                        student(s)
+                                        étudiant(s)
                                     </td>
                                 </tr>
                             ))}
@@ -384,7 +406,7 @@ export default function StudentsPage() {
                                                     student.classId == obj.id
                                             ).length
                                         }{" "}
-                                        student(s)
+                                        étudiant(s)
                                     </td>
                                 </tr>
                             ))}
@@ -448,17 +470,19 @@ export default function StudentsPage() {
                                                     student.classId == obj.id
                                             ).length
                                         }{" "}
-                                        student(s)
+                                        étudiant(s)
                                     </td>
                                 </tr>
                             ))}
                     </table>
                 </div>
+                {/* -------------------- */}
+                {/* Navigateur étudiants */}
                 {selectedClass && (
                     <div className="h-full w-[600px] flex-col items-start justify-start rounded-lg border border-zinc-700 bg-zinc-800 font-jakarta text-zinc-200">
                         <div className="flex w-full items-center justify-between p-4">
                             <p className="font-jakarta text-2xl font-bold text-zinc-200">
-                                Etudiants
+                                {selectedClass.name}
                             </p>
                             <div className="flex items-center justify-between gap-4">
                                 <button
@@ -468,7 +492,7 @@ export default function StudentsPage() {
                                     }}
                                     className="flex h-10 items-center justify-between gap-1 rounded-full bg-brand-yellow p-2 px-4 font-jakarta text-xs font-extrabold text-zinc-900"
                                 >
-                                    Ajouter un compte
+                                    Ajouter un étudiant
                                     <svg
                                         width="17"
                                         height="16"
@@ -482,10 +506,122 @@ export default function StudentsPage() {
                                         />
                                     </svg>
                                 </button>
+                                <Modal
+                                    show={isCreatingStudent}
+                                    onClose={() => setIsCreatingStudent(false)}
+                                >
+                                    {isCreatingStudent && (
+                                        <div className="w-[500px] flex-col items-start justify-start rounded-lg border border-zinc-700 bg-zinc-800 font-jakarta text-zinc-200">
+                                            <div className="flex w-full items-center justify-between border-b border-b-zinc-700 p-4 pb-6">
+                                                <p className="font-jakarta text-2xl font-bold text-zinc-200">
+                                                    Nouvel étudiant
+                                                </p>
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <button
+                                                        onClick={() =>
+                                                            setIsCreatingStudent(
+                                                                false
+                                                            )
+                                                        }
+                                                        className="flex h-10 items-center justify-between gap-1 rounded-full bg-red-900 p-2 px-4 font-jakarta text-xs font-extrabold text-red-100"
+                                                    >
+                                                        Annuler
+                                                        <Icon
+                                                            icon="iconamoon:trash-fill"
+                                                            fontSize={16}
+                                                            className="ml-1 inline"
+                                                        />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="flex w-full flex-col items-start justify-start gap-6 p-4">
+                                                <input
+                                                    type="text"
+                                                    value={firstName ?? ""}
+                                                    onChange={(
+                                                        e: React.FormEvent<HTMLInputElement>
+                                                    ) => {
+                                                        setFirstName(
+                                                            e.currentTarget
+                                                                .value
+                                                        );
+                                                    }}
+                                                    placeholder="Entrer le prénom"
+                                                    className="w-full border-b border-b-zinc-600 bg-transparent pb-1 font-inter text-sm font-bold text-zinc-200 outline-none placeholder:text-zinc-300"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={lastName ?? ""}
+                                                    onChange={(
+                                                        e: React.FormEvent<HTMLInputElement>
+                                                    ) => {
+                                                        setLastName(
+                                                            e.currentTarget
+                                                                .value
+                                                        );
+                                                    }}
+                                                    placeholder="Entrer le nom de famille"
+                                                    className="w-full border-b border-b-zinc-600 bg-transparent pb-1 font-inter text-sm font-bold text-zinc-200 outline-none placeholder:text-zinc-300"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={matricule ?? ""}
+                                                    onChange={(
+                                                        e: React.FormEvent<HTMLInputElement>
+                                                    ) => {
+                                                        setMatricule(
+                                                            e.currentTarget
+                                                                .value
+                                                        );
+                                                    }}
+                                                    placeholder="Entrer le matricule"
+                                                    className="w-full border-b border-b-zinc-600 bg-transparent pb-1 font-inter text-sm font-bold text-zinc-200 outline-none placeholder:text-zinc-300"
+                                                />
+
+                                                <button
+                                                    disabled={
+                                                        !firstName ||
+                                                        !lastName ||
+                                                        !matricule
+                                                    }
+                                                    onClick={() => {
+                                                        if (
+                                                            !(
+                                                                !firstName ||
+                                                                !lastName ||
+                                                                !matricule
+                                                            )
+                                                        ) {
+                                                            createStudent({
+                                                                firstName,
+                                                                lastName,
+                                                                matricule,
+                                                                classId:
+                                                                    selectedClass.id,
+                                                            });
+                                                            setIsCreatingStudent(
+                                                                false
+                                                            );
+                                                            getStudents();
+                                                        }
+                                                    }}
+                                                    className="flex h-10 items-center justify-between gap-1 self-end rounded-full bg-brand-yellow p-2 px-4 font-jakarta text-xs font-extrabold text-zinc-900 disabled:bg-zinc-900 disabled:text-zinc-700"
+                                                >
+                                                    Enregistrer
+                                                    <Icon
+                                                        icon="ic:round-save"
+                                                        fontSize={16}
+                                                        className="ml-1 inline"
+                                                    />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </Modal>
                                 <div className="flex h-10 w-fit items-center justify-between gap-1 rounded-full bg-zinc-900 p-2 px-4 font-jakarta text-xs font-extrabold">
                                     <input
                                         type="text"
-                                        placeholder="Rechercher un utilisateur"
+                                        placeholder="Rechercher un étudiant"
                                         className="bg-transparent text-zinc-200 outline-none placeholder:text-zinc-700"
                                     />
                                     <svg
@@ -542,16 +678,8 @@ export default function StudentsPage() {
                                 .map((s) => {
                                     return (
                                         <tr
-                                            onClick={() => {
-                                                selectedStudent?.id !== s.id
-                                                    ? setSelectedStudent(s)
-                                                    : setSelectedStudent(
-                                                          undefined
-                                                      );
-                                                setIsCreatingStudent(false);
-                                            }}
                                             className={
-                                                "h-12 border-b border-t border-b-zinc-700 border-t-zinc-700 bg-zinc-800 px-4 transition-all hover:bg-zinc-900 " +
+                                                "h-12 border-b border-t border-b-zinc-700 border-t-zinc-700 bg-zinc-800 px-4 transition-all hover:bg-zinc-850 " +
                                                 `${
                                                     selectedStudent?.id ==
                                                         s.id &&
@@ -559,7 +687,7 @@ export default function StudentsPage() {
                                                 }`
                                             }
                                         >
-                                            <td className="px-4 py-3 text-sm font-bold">
+                                            <td className="px-4 py-2 text-sm font-bold">
                                                 <Icon
                                                     icon="fluent-emoji:student-medium"
                                                     fontSize={16}
@@ -567,21 +695,215 @@ export default function StudentsPage() {
                                                 />
                                                 {s.lastName}
                                             </td>
-                                            <td className="px-4 py-3 text-sm font-bold">
+                                            <td className="px-4 py-2 text-sm font-bold">
                                                 {s.firstName}
                                             </td>
-                                            <td className="px-4 py-3 text-sm font-bold">
+                                            <td className="px-4 py-2 text-sm font-bold">
                                                 {s.matricule}
                                             </td>
-                                            <td className="px-4 py-3 text-sm font-bold">
-                                                <div className="flex h-8 items-center justify-center gap-1 rounded-full bg-zinc-900 p-1 font-jakarta text-[10px] font-extrabold text-brand-yellow transition-all hover:cursor-pointer hover:bg-brand-yellow hover:text-zinc-800 hover:brightness-90">
+                                            <td className="px-4 py-2 text-sm font-bold">
+                                                <button
+                                                    onClick={() => {
+                                                        selectedStudent?.id !==
+                                                        s.id
+                                                            ? setSelectedStudent(
+                                                                  s
+                                                              )
+                                                            : setSelectedStudent(
+                                                                  undefined
+                                                              );
+                                                        setIsEditingStudent(
+                                                            true
+                                                        );
+                                                    }}
+                                                    className="flex h-8 items-center justify-center gap-1 rounded-full bg-zinc-900 p-1 px-3 font-jakarta text-[10px] font-extrabold text-brand-yellow transition-all hover:cursor-pointer hover:bg-brand-yellow hover:text-zinc-800 hover:brightness-90"
+                                                >
                                                     Modifier
                                                     <Icon
                                                         icon="ion:options"
                                                         fontSize={12}
                                                         className=""
                                                     />
-                                                </div>
+                                                </button>
+                                                <Modal
+                                                    show={
+                                                        isEditingStudent &&
+                                                        selectedStudent !==
+                                                            undefined
+                                                    }
+                                                    onClose={() => {
+                                                        setIsEditingStudent(
+                                                            false
+                                                        );
+                                                        setSelectedStudent(
+                                                            undefined
+                                                        );
+                                                    }}
+                                                >
+                                                    {isEditingStudent &&
+                                                        selectedStudent && (
+                                                            <div className="w-[500px] flex-col items-start justify-start rounded-lg border border-zinc-700 bg-zinc-800 font-jakarta text-zinc-200">
+                                                                <div className="flex w-full items-center justify-between border-b border-b-zinc-700 p-4 pb-6">
+                                                                    <p className="font-jakarta text-2xl font-bold text-zinc-200">
+                                                                        Modifier
+                                                                        étudiant
+                                                                    </p>
+                                                                    <div className="flex items-center justify-between gap-4">
+                                                                        <button
+                                                                            onClick={() =>
+                                                                                setIsEditingStudent(
+                                                                                    false
+                                                                                )
+                                                                            }
+                                                                            className="flex h-10 items-center justify-between gap-1 rounded-full bg-red-900 p-2 px-4 font-jakarta text-xs font-extrabold text-red-100"
+                                                                        >
+                                                                            Annuler
+                                                                            <Icon
+                                                                                icon="iconamoon:trash-fill"
+                                                                                fontSize={
+                                                                                    16
+                                                                                }
+                                                                                className="ml-1 inline"
+                                                                            />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex w-full flex-col items-start justify-start gap-6 p-4">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            selectedStudent.firstName
+                                                                        }
+                                                                        onChange={(
+                                                                            e: React.FormEvent<HTMLInputElement>
+                                                                        ) => {
+                                                                            setSelectedStudent(
+                                                                                // @ts-expect-error : Typescript is very cool
+                                                                                (
+                                                                                    prev
+                                                                                ) => ({
+                                                                                    ...prev,
+                                                                                    firstName:
+                                                                                        e
+                                                                                            .currentTarget
+                                                                                            .value,
+                                                                                })
+                                                                            );
+                                                                        }}
+                                                                        placeholder="Entrer le prénom"
+                                                                        className="w-full border-b border-b-zinc-600 bg-transparent pb-1 font-inter text-sm font-bold text-zinc-200 outline-none placeholder:text-zinc-300"
+                                                                    />
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            selectedStudent.lastName
+                                                                        }
+                                                                        onChange={(
+                                                                            e: React.FormEvent<HTMLInputElement>
+                                                                        ) => {
+                                                                            setSelectedStudent(
+                                                                                (
+                                                                                    prev
+                                                                                ) => {
+                                                                                    if (
+                                                                                        prev
+                                                                                    ) {
+                                                                                        const obj =
+                                                                                            {
+                                                                                                ...prev,
+                                                                                            };
+                                                                                        obj.lastName =
+                                                                                            e.currentTarget.value;
+                                                                                        return obj;
+                                                                                    }
+                                                                                }
+                                                                            );
+                                                                        }}
+                                                                        placeholder="Entrer le nom de famille"
+                                                                        className="w-full border-b border-b-zinc-600 bg-transparent pb-1 font-inter text-sm font-bold text-zinc-200 outline-none placeholder:text-zinc-300"
+                                                                    />
+
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            selectedStudent.matricule
+                                                                        }
+                                                                        onChange={(
+                                                                            e: React.FormEvent<HTMLInputElement>
+                                                                        ) => {
+                                                                            setSelectedStudent(
+                                                                                (
+                                                                                    prev
+                                                                                ) => {
+                                                                                    if (
+                                                                                        prev
+                                                                                    ) {
+                                                                                        const obj =
+                                                                                            {
+                                                                                                ...prev,
+                                                                                            };
+                                                                                        obj.matricule =
+                                                                                            e.currentTarget.value;
+                                                                                        return obj;
+                                                                                    }
+                                                                                }
+                                                                            );
+                                                                        }}
+                                                                        placeholder="Entrer le matricule"
+                                                                        className="w-full border-b border-b-zinc-600 bg-transparent pb-1 font-inter text-sm font-bold text-zinc-200 outline-none placeholder:text-zinc-300"
+                                                                    />
+
+                                                                    <button
+                                                                        disabled={
+                                                                            !selectedStudent?.firstName ||
+                                                                            !selectedStudent.lastName ||
+                                                                            !selectedStudent.matricule
+                                                                        }
+                                                                        onClick={() => {
+                                                                            if (
+                                                                                !(
+                                                                                    !selectedStudent?.firstName ||
+                                                                                    !selectedStudent.lastName ||
+                                                                                    !selectedStudent.matricule
+                                                                                )
+                                                                            ) {
+                                                                                createClass(
+                                                                                    {
+                                                                                        name: selectedStudent.lastName,
+                                                                                        major: selectedStudent?.firstName,
+                                                                                    }
+                                                                                );
+                                                                                setIsEditingStudent(
+                                                                                    false
+                                                                                );
+                                                                                updateStudent(
+                                                                                    selectedStudent.id,
+                                                                                    {
+                                                                                        firstName:
+                                                                                            selectedStudent.firstName,
+                                                                                        lastName:
+                                                                                            selectedStudent.lastName,
+                                                                                        matricule:
+                                                                                            selectedStudent.matricule,
+                                                                                    }
+                                                                                );
+                                                                            }
+                                                                        }}
+                                                                        className="flex h-10 items-center justify-between gap-1 self-end rounded-full bg-brand-yellow p-2 px-4 font-jakarta text-xs font-extrabold text-zinc-900 disabled:bg-zinc-900 disabled:text-zinc-700"
+                                                                    >
+                                                                        Enregistrer
+                                                                        <Icon
+                                                                            icon="ic:round-save"
+                                                                            fontSize={
+                                                                                16
+                                                                            }
+                                                                            className="ml-1 inline"
+                                                                        />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                </Modal>
                                             </td>
                                         </tr>
                                     );
