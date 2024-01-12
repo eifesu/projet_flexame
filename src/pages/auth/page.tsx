@@ -54,7 +54,7 @@ export default function AuthPage() {
                         />
                         <div className="flex flex-col gap-2 text-center">
                             <a
-                                href="/grades"
+                                href="/utlisateurs"
                                 className="tracking-tightest rounded-full text-xs bg-brand-yellow p-3 px-6 font-jakarta font-extrabold active:bg-zinc-800 active:text-brand-yellow"
                             >
                                 Se connecter en tant qu'administrateur

@@ -268,7 +268,7 @@ export default function GradesPage() {
                             onClose={() => setIsScanning(false)}
                         >
                             <QrReader
-                                constraints={{ facingMode: "user" }}
+                                constraints={{ facingMode: "environment" }}
                                 onResult={(result, error) => {
                                     if (result) {
                                         setData(result.getText());
@@ -310,7 +310,7 @@ export default function GradesPage() {
                             onClose={() => setIsPrinting(false)}
                         >
                             <QrReader
-                                constraints={{ facingMode: "user" }}
+                                constraints={{ facingMode: "environment" }}
                                 onResult={async (result, error) => {
                                     if (result) {
                                         const doc = await generateReport(
